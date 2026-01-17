@@ -19,6 +19,7 @@ export const routes: Routes = [
   { path: 'templates', component: ITPTemplatesComponent },
   { path: 'jobs', component: InspectionJobsComponent },
   { path: 'components', component: ComponentMasterComponent },
+  { path: 'components/:componentId', component: ComponentMasterComponent },
   { path: 'components/inspection-points', component: ComponentInspectionPointsComponent },
   { path: 'components/asset-points', component: AssetComponentPointsComponent },
   { path: 'components/parameters', component: ComponentParametersComponent },

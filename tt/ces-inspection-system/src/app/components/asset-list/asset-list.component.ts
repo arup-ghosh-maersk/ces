@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AssetService } from '../../services/asset.service';
 import { ComponentMasterService } from '../../services/component-master.service';
 import { AssetSpecsService } from '../../services/asset-specs.service';
@@ -10,7 +10,7 @@ import { Observable } from 'rxjs';
 @Component({
   selector: 'app-asset-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   template: `
     <div class="asset-container">
       <div class="assets-section">
@@ -176,139 +176,162 @@ import { Observable } from 'rxjs';
             <div class="no-specs">
               <p>No technical specifications available for this asset</p>
               <small>Add specifications to view detailed asset data</small>
-            </div>
-          </div><div class="info-section">
-            <h4>Component Tree Structure</h4>
-            <div class="tree-container" *ngIf="componentTree && componentTree.length > 0">
-              <div class="tree">
-                <ng-container *ngFor="let component of componentTree">
-                  <ng-container *ngTemplateOutlet="treeNode; context: {$implicit: component, level: 0}"></ng-container>
-                </ng-container>
+            </div>          </div>          <div class="info-section">
+            <h4>Components Summary</h4>
+            <div class="components-summary" *ngIf="assetComponents && assetComponents.length > 0">
+              <div class="tree-container">
+                <div class="tree">
+                  <ng-container *ngFor="let component of componentTree">
+                    <div class="tree-node">
+                      <div class="node-content" [ngClass]="{ selected: selectedComponentId === component.componentId }">
+                        <button *ngIf="hasChildren(component)" 
+                                class="expand-btn"
+                                (click)="toggleNode(component)"
+                                [attr.aria-label]="'Toggle ' + component.componentName">
+                          <span class="arrow" [ngClass]="{ 'rotated': isExpanded(component) }">▼</span>
+                        </button>
+                        <span *ngIf="!hasChildren(component)" class="no-children-icon"></span>
+                        <div class="node-info">
+                          <span class="component-name">{{ component.componentName }}</span>
+                          <span class="component-code">{{ component.componentCode }}</span>
+                          <span [ngClass]="'badge badge-' + component.category.toLowerCase()">{{ component.category }}</span>
+                          <span [ngClass]="'badge badge-' + component.criticality.toLowerCase()">{{ component.criticality }}</span>
+                          <span [ngClass]="'status-badge ' + (component.isActive ? 'status-active' : 'status-inactive')">
+                            {{ component.isActive ? '●' : '○' }}
+                          </span>
+                        </div>
+                        <button class="details-btn" 
+                                (click)="openComponentDetails(component)"
+                                [attr.aria-label]="'View details for ' + component.componentName"
+                                title="View component details">
+                          Details
+                        </button>
+                      </div>
+
+                      <div class="children" *ngIf="isExpanded(component) && hasChildren(component)">
+                        <ng-container *ngFor="let childComponent of getChildren(component)">
+                          <div class="tree-node">
+                            <div class="node-content">
+                              <button *ngIf="hasChildren(childComponent)" 
+                                      class="expand-btn"
+                                      (click)="toggleNode(childComponent)"
+                                      [attr.aria-label]="'Toggle ' + childComponent.componentName">
+                                <span class="arrow" [ngClass]="{ 'rotated': isExpanded(childComponent) }">▼</span>
+                              </button>
+                              <span *ngIf="!hasChildren(childComponent)" class="no-children-icon"></span>
+                              <div class="node-info">
+                                <span class="component-name">{{ childComponent.componentName }}</span>
+                                <span class="component-code">{{ childComponent.componentCode }}</span>
+                                <span [ngClass]="'badge badge-' + childComponent.category.toLowerCase()">{{ childComponent.category }}</span>
+                                <span [ngClass]="'badge badge-' + childComponent.criticality.toLowerCase()">{{ childComponent.criticality }}</span>
+                                <span [ngClass]="'status-badge ' + (childComponent.isActive ? 'status-active' : 'status-inactive')">
+                                  {{ childComponent.isActive ? '●' : '○' }}
+                                </span>
+                              </div>
+                              <button class="details-btn" 
+                                      (click)="openComponentDetails(childComponent)"
+                                      [attr.aria-label]="'View details for ' + childComponent.componentName"
+                                      title="View component details">
+                                Details
+                              </button>
+                            </div>
+                          </div>
+                        </ng-container>
+                      </div>
+                    </div>
+                  </ng-container>
+                </div>
               </div>
-            </div>
-            <div class="no-components" *ngIf="!componentTree || componentTree.length === 0">
+            </div>            <div class="no-components" *ngIf="!assetComponents || assetComponents.length === 0">
               <p>No components found for this asset</p>
             </div>
-          </div>          <ng-template #treeNode let-component let-level="level">
-            <div class="tree-node" [style.margin-left.px]="level * 20">
-              <div class="node-content" (click)="selectComponent(component)" [class.selected]="selectedComponentId === component.componentId">
-                <button class="expand-btn" 
-                        *ngIf="hasChildren(component)"
-                        (click)="toggleNode(component); $event.stopPropagation()"
-                        [class.expanded]="isExpanded(component)">
-                  <span class="arrow">{{ isExpanded(component) ? '▼' : '▶' }}</span>
-                </button>
-                <span class="no-children-icon" *ngIf="!hasChildren(component)">•</span>
-                
-                <div class="node-info">
-                  <span class="component-name">{{ component.componentName }}</span>
-                  <span [ngClass]="'badge badge-' + component.category.toLowerCase()">{{ component.category }}</span>
-                  <span [ngClass]="'badge badge-' + component.criticality.toLowerCase()">{{ component.criticality }}</span>
-                </div>
-              </div><div class="node-details" [class.always-visible]="true" *ngIf="selectedComponentId === component.componentId">
-                <div class="details-container">
-                  <div class="detail-section">
-                    <h6>Basic Information</h6>
-                    <div class="detail-grid">
-                      <div class="detail-item">
-                        <span class="label">Component ID:</span>
-                        <span class="value">{{ component.componentId }}</span>
-                      </div>
-                      <div class="detail-item">
-                        <span class="label">Code:</span>
-                        <span class="value">{{ component.componentCode }}</span>
-                      </div>
-                      <div class="detail-item">
-                        <span class="label">Category:</span>
-                        <span class="value">{{ component.category }}</span>
-                      </div>
-                      <div class="detail-item">
-                        <span class="label">Asset Type:</span>
-                        <span class="value">{{ component.assetType }}</span>
-                      </div>
-                    </div>
-                  </div>
+          </div>
 
-                  <div class="detail-section">
-                    <h6>Technical Specifications</h6>
-                    <div class="detail-grid">
-                      <div class="detail-item">
-                        <span class="label">Manufacturer:</span>
-                        <span class="value">{{ component.manufacturer || 'N/A' }}</span>
-                      </div>
-                      <div class="detail-item">
-                        <span class="label">Model Number:</span>
-                        <span class="value">{{ component.modelNumber || 'N/A' }}</span>
-                      </div>
-                      <div class="detail-item">
-                        <span class="label">Serial Number:</span>
-                        <span class="value">{{ component.serialNumber || 'N/A' }}</span>
-                      </div>
-                      <div class="detail-item">
-                        <span class="label">Warranty Expiry:</span>
-                        <span class="value">{{ (component.warrantyExpiry | date:'MMM dd, yyyy') || 'N/A' }}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="detail-section">
-                    <h6>Maintenance Information</h6>
-                    <div class="detail-grid">
-                      <div class="detail-item">
-                        <span class="label">Maintenance Interval:</span>
-                        <span class="value">{{ component.maintenanceIntervalDays || 'N/A' }} days</span>
-                      </div>
-                      <div class="detail-item">
-                        <span class="label">Last Maintenance:</span>
-                        <span class="value">{{ (component.lastMaintenanceDate | date:'MMM dd, yyyy') || 'N/A' }}</span>
-                      </div>
-                      <div class="detail-item">
-                        <span class="label">Next Maintenance:</span>
-                        <span class="value">{{ (component.nextMaintenanceDate | date:'MMM dd, yyyy') || 'N/A' }}</span>
-                      </div>
-                      <div class="detail-item">
-                        <span class="label">Status:</span>
-                        <span class="value" [ngClass]="component.isActive ? 'status-active' : 'status-inactive'">
-                          {{ component.isActive ? 'Active' : 'Inactive' }}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="detail-section" *ngIf="component.description">
-                    <h6>Description</h6>
-                    <p class="description">{{ component.description }}</p>
-                  </div>                  <div class="detail-section" *ngIf="component.specifications">
-                    <h6>Specifications</h6>
-                    <p class="description">{{ component.specifications }}</p>
-                  </div>                  <div class="detail-section" *ngIf="component.diagramUrl">
-                    <h6>2D Component Drawing</h6>
-                    <div class="component-diagram-container">
-                      <img [src]="component.diagramUrl" [alt]="'2D Drawing for ' + component.componentName" class="component-diagram-image">
-                      <div class="diagram-metadata">
-                        <p><strong>Component:</strong> {{ component.componentName }}</p>
-                        <p><strong>Code:</strong> {{ component.componentCode }}</p>
-                        <p><strong>Category:</strong> {{ component.category }}</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="detail-section" *ngIf="!component.diagramUrl">
-                    <h6>2D Component Drawing</h6>
-                    <div class="no-component-diagram">
-                      <p>No 2D drawing available for this component</p>
-                      <small>Add a diagram URL to display technical drawings</small>
-                    </div>
-                  </div>
-                </div>
+          <div *ngIf="selectedComponentForDetails" class="component-details-modal">
+            <div class="modal-overlay" (click)="closeComponentDetails()"></div>
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4>{{ selectedComponentForDetails.componentName }}</h4>
+                <button class="close-btn" (click)="closeComponentDetails()">✕</button>
               </div>
+              <div class="modal-body">
+                <div class="detail-section">
+                  <h5>Basic Information</h5>
+                  <div class="detail-grid">                    <div class="detail-item">
+                      <label class="label">Component ID</label>
+                      <span class="value">
+                        <a [routerLink]="['/components', selectedComponentForDetails.componentId]" 
+                           [queryParams]="{ autoScroll: 'details' }"
+                           fragment="component-details"
+                           class="component-id-link"
+                           (click)="closeComponentDetails()"
+                           title="View full component details">
+                          {{ selectedComponentForDetails.componentId }}
+                        </a>
+                      </span>
+                    </div>
+                    <div class="detail-item">
+                      <label class="label">Component Code</label>
+                      <span class="value">{{ selectedComponentForDetails.componentCode }}</span>
+                    </div>
+                    <div class="detail-item">
+                      <label class="label">Asset ID</label>
+                      <span class="value">{{ selectedComponentForDetails.assetId }}</span>
+                    </div>
+                    <div class="detail-item">
+                      <label class="label">Category</label>
+                      <span class="value"><span [ngClass]="'badge badge-' + selectedComponentForDetails.category.toLowerCase()">{{ selectedComponentForDetails.category }}</span></span>
+                    </div>
+                    <div class="detail-item">
+                      <label class="label">Criticality</label>
+                      <span class="value"><span [ngClass]="'badge badge-' + selectedComponentForDetails.criticality.toLowerCase()">{{ selectedComponentForDetails.criticality }}</span></span>
+                    </div>
+                    <div class="detail-item">
+                      <label class="label">Status</label>
+                      <span class="value" [ngClass]="selectedComponentForDetails.isActive ? 'status-active' : 'status-inactive'">
+                        {{ selectedComponentForDetails.isActive ? 'Active' : 'Inactive' }}
+                      </span>
+                    </div>
+                    <div class="detail-item">
+                      <label class="label">Manufacturer</label>
+                      <span class="value">{{ selectedComponentForDetails.manufacturer || 'N/A' }}</span>
+                    </div>
+                  </div>
+                </div>
 
-              <div class="children" *ngIf="isExpanded(component) && hasChildren(component)">
-                <ng-container *ngFor="let child of getChildren(component)">
-                  <ng-container *ngTemplateOutlet="treeNode; context: {$implicit: child, level: level + 1}"></ng-container>
-                </ng-container>
+                <div *ngIf="selectedComponentForDetails.description" class="detail-section">
+                  <h5>Description</h5>
+                  <p class="description">{{ selectedComponentForDetails.description }}</p>
+                </div>
+
+                <div *ngIf="getChildren(selectedComponentForDetails).length > 0" class="detail-section">
+                  <h5>Subcomponents ({{ getChildren(selectedComponentForDetails).length }})</h5>
+                  <div class="subcomponents-list">
+                    <div *ngFor="let subcomp of getChildren(selectedComponentForDetails)" class="subcomponent-item">
+                      <div class="subcomp-header">
+                        <span class="subcomp-name">{{ subcomp.componentName }}</span>
+                        <span [ngClass]="'badge badge-' + subcomp.criticality.toLowerCase()">{{ subcomp.criticality }}</span>
+                      </div>
+                      <div class="subcomp-details">
+                        <div>
+                          <span class="detail-label">Code:</span>
+                          <span class="detail-value">{{ subcomp.componentCode }}</span>
+                        </div>
+                        <div>
+                          <span class="detail-label">Category:</span>
+                          <span class="detail-value"><span [ngClass]="'badge badge-' + subcomp.category.toLowerCase()">{{ subcomp.category }}</span></span>
+                        </div>
+                        <div>
+                          <span class="detail-label">Status:</span>
+                          <span class="detail-value" [ngClass]="subcomp.isActive ? 'status-active' : 'status-inactive'">{{ subcomp.isActive ? 'Active' : 'Inactive' }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-          </ng-template>
+          </div>
         </div>
       </div>
     </div>
@@ -586,61 +609,19 @@ import { Observable } from 'rxjs';
     .no-diagram small {
       font-size: 12px;
       color: #bbb;
-    }
-
-    .subcomponents-container {
+    }    .subcomponents-container {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 15px;
-    }
-
-    .component-card {
-      background: white;
-      border: 1px solid #e0e0e0;
-      border-radius: 6px;
-      overflow: hidden;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-      transition: box-shadow 0.3s ease;
-    }
-
-    .component-card:hover {
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-
-    .component-header {
-      background: linear-gradient(135deg, #7b1fa2 0%, #5a1380 100%);
-      color: white;
-      padding: 12px 15px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .component-header h5 {
-      margin: 0;
-      color: white;
-    }
-
-    .component-details {
-      padding: 15px;
-    }
-
-    .component-details p {
-      margin: 8px 0;
-      font-size: 13px;
-      color: #666;
-      line-height: 1.5;
-    }
-
-    .component-details strong {
-      color: #333;
     }    .no-components {
       text-align: center;
       padding: 40px;
       color: #999;
       background-color: #f9f9f9;
       border-radius: 6px;
-    }    .tree-container {
+    }
+
+    .tree-container {
       background: white;
       border: 1px solid #e0e0e0;
       border-radius: 6px;
@@ -653,7 +634,9 @@ import { Observable } from 'rxjs';
 
     .tree-node {
       margin: 8px 0;
-    }    .node-content {
+    }
+
+    .node-content {
       display: flex;
       align-items: center;
       padding: 10px;
@@ -682,7 +665,7 @@ import { Observable } from 'rxjs';
       font-size: 12px;
       font-weight: bold;
       min-width: 20px;
-      transition: color 0.2s ease;
+      transition: transform 0.2s ease;
     }
 
     .expand-btn:hover {
@@ -692,6 +675,10 @@ import { Observable } from 'rxjs';
     .expand-btn .arrow {
       display: inline-block;
       transition: transform 0.2s ease;
+    }
+
+    .expand-btn .arrow.rotated {
+      transform: rotate(90deg);
     }
 
     .no-children-icon {
@@ -705,7 +692,10 @@ import { Observable } from 'rxjs';
       font-weight: bold;
       color: #333;
       margin-right: 10px;
-      flex: 1;
+    }
+
+    .component-code {
+      margin-right: 8px;
     }    .node-info {
       display: flex;
       align-items: center;
@@ -717,9 +707,7 @@ import { Observable } from 'rxjs';
       transition: background-color 0.2s ease;
     }
 
-    .node-info:hover {
-      background-color: rgba(123, 31, 162, 0.1);
-    }    .node-details {
+    .node-details {
       margin: 10px 0 10px 20px;
       padding: 15px;
       background: #f5f5f5;
@@ -799,7 +787,9 @@ import { Observable } from 'rxjs';
     .detail-item .status-inactive {
       color: #c62828;
       font-weight: bold;
-    }    .description {
+    }
+
+    .description {
       color: #666;
       font-size: 13px;
       margin: 0;
@@ -841,7 +831,7 @@ import { Observable } from 'rxjs';
 
     .subcomp-details {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
       gap: 8px;
       font-size: 12px;
     }
@@ -852,78 +842,268 @@ import { Observable } from 'rxjs';
       font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 0.3px;
+      display: block;
+      margin-bottom: 3px;
     }    .detail-value {
       color: #555;
       padding: 3px 5px;
       background: white;
       border-radius: 2px;
       border: 1px solid #ddd;
-    }    .component-diagram-container {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      border: 2px solid #e0e0e0;
-      border-radius: 6px;
-      padding: 15px;
-      background-color: #fafafa;
-      min-height: 250px;
-    }
-
-    .component-diagram-image {
       display: block;
-      width: auto;
-      max-width: 100%;
-      max-height: 400px;
-      height: auto;
-      object-fit: contain;
-      border-radius: 4px;
-      background: white;
-      padding: 8px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
-    .diagram-metadata {
-      width: 100%;
-      padding: 10px;
-      background: white;
-      border-radius: 4px;
-      border-left: 3px solid #7b1fa2;
-      font-size: 11px;
-    }
-
-    .diagram-metadata p {
-      margin: 4px 0;
-      color: #555;
-    }
-
-    .diagram-metadata strong {
-      color: #7b1fa2;
-      font-weight: 600;
-    }
-
-    .no-component-diagram {
-      width: 100%;
-      padding: 30px 15px;
-      background: linear-gradient(135deg, #f5f5f5 0%, #fafafa 100%);
-      border-radius: 6px;
-      border: 2px dashed #ddd;
-      text-align: center;
-      color: #999;
-    }
-
-    .no-component-diagram p {
-      margin: 8px 0 3px 0;
-      font-size: 13px;
-    }    .no-component-diagram small {
-      font-size: 11px;
-      color: #bbb;
-    }    .children {
+    .children {
       margin-left: 10px;
       padding: 8px 0 8px 8px;
       border-left: 2px dotted #7b1fa2;
+    }    /* Component Details Modal */
+    .component-details-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      align-items: flex-end;
+      z-index: 1000;
+      animation: slideUpModal 0.3s ease-out;
+    }
+
+    @keyframes slideUpModal {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    .modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      cursor: pointer;
+    }    .modal-content {
+      position: relative;
+      background: white;
+      width: 100%;
+      max-width: 600px;
+      max-height: 90vh;
+      margin: 0 auto;
+      border-radius: 12px 12px 0 0;
+      box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.15);
+      display: flex;
+      flex-direction: column;
+      animation: slideUp 0.3s ease-out;
+      overflow: hidden;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(100%);
+      }
+      to {
+        transform: translateY(0);
+      }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      border-bottom: 2px solid #eee;
+      background: linear-gradient(135deg, #7b1fa2 0%, #5a1380 100%);
+      color: white;
+      border-radius: 12px 12px 0 0;
+    }
+
+    .modal-header h4 {
+      margin: 0;
+      color: white;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      transition: background-color 0.2s ease;
+    }
+
+    .close-btn:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+    }    .modal-body {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 20px;
+      padding-bottom: 40px;
+      background: white;
+      min-height: 200px;
+    }    .modal-body .detail-section {
+      margin-bottom: 25px;
+      padding: 18px;
+      background-color: #f9f9f9;
+      border-radius: 6px;
+      border-left: 4px solid #7b1fa2;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .modal-body .detail-section h5 {
+      margin: 0 0 15px 0;
+      color: #7b1fa2;
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }    .modal-body .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      width: 100%;
+    }    .modal-body .detail-item {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      width: 100%;
+    }
+
+    .modal-body .detail-item .label {
+      font-weight: 600;
+      color: #7b1fa2;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .modal-body .detail-item .value {
+      color: #333;
+      font-size: 13px;
+      padding: 8px;
+      background: white;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+    }
+
+    .modal-body .description {
+      color: #555;
+      font-size: 13px;
+      line-height: 1.6;
+      padding: 10px;
+      background: white;
+      border-radius: 4px;
+      border-left: 2px solid #7b1fa2;
+      margin: 0;
+    }
+
+    .modal-body .subcomponents-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }    .modal-body .subcomponent-item {
+      background: white;
+      padding: 15px;
+      border-radius: 6px;
+      border: 1px solid #e0e0e0;
+      border-left: 3px solid #7b1fa2;
+      margin-bottom: 12px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .modal-body .subcomp-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .modal-body .subcomp-name {
+      font-weight: 600;
+      color: #333;
+      flex: 1;
+    }
+
+    .modal-body .subcomp-details {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      font-size: 12px;
+    }
+
+    .modal-body .detail-label {
+      font-weight: 600;
+      color: #7b1fa2;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .modal-body .detail-value {
+      color: #555;
+      padding: 5px 8px;
+      background: #f9f9f9;
+      border-radius: 3px;
+      border: 1px solid #e0e0e0;
+      display: block;
+    }
+
+    /* Details Button */
+    .details-btn {
+      background-color: #7b1fa2;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      margin-left: 8px;
+    }
+
+    .details-btn:hover {
+      background-color: #5a1380;
+      box-shadow: 0 2px 8px rgba(123, 31, 162, 0.3);
+    }
+
+    .details-btn:active {
+      transform: scale(0.98);
+    }
+
+    /* Status Badge */
+    .status-badge {
+      font-size: 12px;
+      margin-left: 4px;
+    }
+
+    .status-badge.status-active {
+      color: #2e7d32;
+    }
+
+    .status-badge.status-inactive {
+      color: #c62828;
     }
 
     .specs-grid {
@@ -1001,11 +1181,70 @@ import { Observable } from 'rxjs';
     .no-specs p {
       margin: 10px 0 5px 0;
       font-size: 14px;
-    }
-
-    .no-specs small {
+    }    .no-specs small {
       font-size: 12px;
       color: #bbb;
+    }
+
+    .components-summary {
+      width: 100%;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .summary-table {
+      width: 100%;
+    }
+
+    .summary-table .table {
+      margin-bottom: 0;
+      box-shadow: none;
+    }
+
+    .summary-table .table tr {
+      border-bottom: 1px solid #ddd;
+    }
+
+    .summary-table .table tbody tr:hover {
+      background-color: #f0f7ff;
+    }
+
+    .status-active {
+      color: #2e7d32;
+      font-weight: bold;
+      padding: 4px 8px;
+      background-color: #e8f5e9;
+      border-radius: 3px;
+      font-size: 12px;
+    }    .status-inactive {
+      color: #c62828;
+      font-weight: bold;
+      padding: 4px 8px;
+      background-color: #ffebee;
+      border-radius: 3px;
+      font-size: 12px;
+    }
+
+    /* Component ID Link */
+    .component-id-link {
+      color: #1976d2;
+      text-decoration: none;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 3px;
+      transition: all 0.2s ease;
+      border-bottom: 2px solid #1976d2;
+    }
+
+    .component-id-link:hover {
+      color: #1565c0;
+      background-color: #e3f2fd;
+      border-bottom-color: #1565c0;
+    }
+
+    .component-id-link:active {
+      transform: scale(0.98);
     }
 
     @media (max-width: 768px) {
@@ -1033,21 +1272,18 @@ import { Observable } from 'rxjs';
     }
   `]
 })
-export class AssetListComponent implements OnInit {
-  assets$: Observable<Asset[]>;
-  selectedAssetId: string | null = null;
-  selectedAsset: Asset | null = null;
+export class AssetListComponent implements OnInit {  assets$: Observable<Asset[]>;
+  selectedAssetId: string | null = null;  selectedAsset: Asset | null = null;
   selectedAssetSpecs: AssetSpecs | null = null;
   assetComponents: ComponentMaster[] = [];
-  componentTree: ComponentMaster[] = [];
-  expandedNodes: Set<string> = new Set();
+  componentTree: ComponentMaster[] = [];  expandedNodes: Set<string> = new Set();
   selectedComponentId: string | null = null;
-
-  constructor(
+  selectedComponentForDetails: ComponentMaster | null = null;  constructor(
     private assetService: AssetService,
     private componentService: ComponentMasterService,
     private assetSpecsService: AssetSpecsService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private router: Router
   ) {
     this.assets$ = this.assetService.getAssets();
   }
@@ -1071,9 +1307,7 @@ export class AssetListComponent implements OnInit {
     this.selectedAsset = asset;
     this.loadAssetComponents(asset.assetId);
     this.loadAssetSpecs(asset.assetId);
-  }
-
-  closeDetails(): void {
+  }  closeDetails(): void {
     this.selectedAssetId = null;
     this.selectedAsset = null;
     this.selectedAssetSpecs = null;
@@ -1081,6 +1315,7 @@ export class AssetListComponent implements OnInit {
     this.componentTree = [];
     this.expandedNodes.clear();
     this.selectedComponentId = null;
+    this.selectedComponentForDetails = null;
   }private loadAssetComponents(assetId: string): void {
     // Load components for this asset from the service
     const allComponents$ = this.componentService.getComponents();
@@ -1107,6 +1342,7 @@ export class AssetListComponent implements OnInit {
   getChildren(component: ComponentMaster): ComponentMaster[] {
     return this.assetComponents.filter(comp => comp.parentComponentId === component.componentId);
   }
+
   toggleNode(component: ComponentMaster): void {
     if (this.expandedNodes.has(component.componentId)) {
       this.expandedNodes.delete(component.componentId);
@@ -1122,9 +1358,11 @@ export class AssetListComponent implements OnInit {
       this.expandedNodes.add(component.componentId);
     }
   }
+
   isExpanded(component: ComponentMaster): boolean {
     return this.expandedNodes.has(component.componentId);
   }
+
   selectComponent(component: ComponentMaster): void {
     // Toggle the selected component - if it's already selected, deselect it
     if (this.selectedComponentId === component.componentId) {
@@ -1140,12 +1378,17 @@ export class AssetListComponent implements OnInit {
       this.selectedAssetSpecs = specs || null;
     });
   }
-
   isServiceUpcoming(nextServiceDate: Date | undefined): boolean {
     if (!nextServiceDate) return false;
     const today = new Date();
     const thirtyDaysFromNow = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
     return nextServiceDate <= thirtyDaysFromNow && nextServiceDate >= today;
+  }  openComponentDetails(component: ComponentMaster): void {
+    this.selectedComponentForDetails = component;
+  }
+
+  closeComponentDetails(): void {
+    this.selectedComponentForDetails = null;
   }
 }
 

@@ -24,8 +24,7 @@ import { filter } from 'rxjs/operators';
           <li><a routerLink="/dashboard" routerLinkActive="active" (click)="closeSidebarOnMobile()">
             <span class="icon">📊</span>
             <span class="label">Dashboard</span>
-          </a></li>
-          <li><a routerLink="/jobs" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+          </a></li>          <li><a routerLink="/jobs" routerLinkActive="active" (click)="closeSidebarOnMobile()">
             <span class="icon">✅</span>
             <span class="label">Inspection Jobs</span>
           </a></li>
@@ -37,9 +36,9 @@ import { filter } from 'rxjs/operators';
             </div>            <ul class="admin-submenu" [class.open]="adminOpen" *ngIf="adminOpen">              <li><a routerLink="/assets" routerLinkActive="active" (click)="closeSidebarOnMobile()">
                 <span class="icon">🏗️</span>
                 <span class="label">Assets</span>
-              </a></li>              <li><a routerLink="/locations" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-                <span class="icon">📍</span>
-                <span class="label">Locations</span>
+              </a></li>              <li><a routerLink="/components" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+                <span class="icon">⚙️</span>
+                <span class="label">Components</span>
               </a></li>
               <li><a routerLink="/components/parameters" routerLinkActive="active" (click)="closeSidebarOnMobile()">
                 <span class="icon">📌</span>
@@ -48,6 +47,10 @@ import { filter } from 'rxjs/operators';
               <li><a routerLink="/templates" routerLinkActive="active" (click)="closeSidebarOnMobile()">
                 <span class="icon">📋</span>
                 <span class="label">ITP Templates</span>
+              </a></li>
+              <li><a routerLink="/locations" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+                <span class="icon">📍</span>
+                <span class="label">Locations</span>
               </a></li>
             </ul>
           </li>

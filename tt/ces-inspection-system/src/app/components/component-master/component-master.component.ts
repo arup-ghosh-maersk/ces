@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs';
 import { ComponentMaster } from '../../models';
 import { ComponentMasterService } from '../../services/component-master.service';
@@ -88,9 +88,7 @@ import { ComponentMasterService } from '../../services/component-master.service'
             </tr>
           </tbody>
         </table>
-      </div>
-
-      <div class="component-details-section" *ngIf="selectedComponent">
+      </div>      <div class="component-details-section" *ngIf="selectedComponent" id="component-details">
         <div class="details-header">
           <h3>Component Details</h3>
           <button class="btn btn-close" (click)="closeDetails()">✕</button>
@@ -633,15 +631,41 @@ export class ComponentMasterComponent implements OnInit {
   childComponents: ComponentMaster[] = [];
   private currentFilter: { assetId?: string; assetType?: string; category?: string; criticality?: string } = {};
   private allComponents: ComponentMaster[] = [];
-
-  constructor(private componentMasterService: ComponentMasterService) {
+  constructor(
+    private componentMasterService: ComponentMasterService,
+    private route: ActivatedRoute
+  ) {
     this.filteredComponents$ = this.componentMasterService.getComponents();
   }
-
   ngOnInit(): void {
     // Cache all components for filtering operations
     this.componentMasterService.getComponents().subscribe(components => {
       this.allComponents = components;
+    });
+
+    // Check for componentId in route parameters
+    this.route.params.subscribe(params => {
+      const componentId = params['componentId'];
+      if (componentId) {
+        this.componentMasterService.getComponents().subscribe(components => {
+          const component = components.find(c => c.componentId === componentId);
+          if (component) {
+            this.selectComponent(component);
+            
+            // Scroll to component details section if autoScroll query param is set
+            this.route.queryParams.subscribe(queryParams => {
+              if (queryParams['autoScroll'] === 'details') {
+                setTimeout(() => {
+                  const detailsElement = document.getElementById('component-details');
+                  if (detailsElement) {
+                    detailsElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                }, 300); // Small delay to ensure rendering
+              }
+            });
+          }
+        });
+      }
     });
   }
 
