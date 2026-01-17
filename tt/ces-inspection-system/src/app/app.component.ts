@@ -36,11 +36,11 @@ import { filter } from 'rxjs/operators';
             </div>            <ul class="admin-submenu" [class.open]="adminOpen" *ngIf="adminOpen">              <li><a routerLink="/assets" routerLinkActive="active" (click)="closeSidebarOnMobile()">
                 <span class="icon">🏗️</span>
                 <span class="label">Assets</span>
-              </a></li>              <li><a routerLink="/components" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+              </a></li>              <li><a routerLink="/components" [class.active]="currentRoute.startsWith('/components') && !currentRoute.includes('/components/parameters') && !currentRoute.includes('/components/inspection-points') && !currentRoute.includes('/components/asset-points')" (click)="closeSidebarOnMobile()">
                 <span class="icon">⚙️</span>
                 <span class="label">Components</span>
               </a></li>
-              <li><a routerLink="/components/parameters" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+              <li><a routerLink="/components/parameters" [class.active]="currentRoute.includes('/components/parameters')" (click)="closeSidebarOnMobile()">
                 <span class="icon">📌</span>
                 <span class="label">Component Parameters</span>
               </a></li>
@@ -415,13 +415,17 @@ export class AppComponent implements OnInit {
   title = 'ces-inspection-system';
   sidebarOpen = false;
   pageTitle = 'Dashboard';
-  adminOpen = false;  private pageNames: { [key: string]: string } = {
+  adminOpen = false;
+  currentRoute = '';
+
+  private pageNames: { [key: string]: string } = {
     'dashboard': 'Dashboard',
     'assets': 'Assets',
     'locations': 'Terminal Locations',
     'templates': 'ITP Templates',
     'jobs': 'Inspection Jobs',
-    'components': 'Components'
+    'components': 'Components',
+    'parameters': 'Component Parameters'
   };
 
   constructor(private router: Router) {}
@@ -431,12 +435,25 @@ export class AppComponent implements OnInit {
     this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
       .subscribe((event: any) => {
+        this.currentRoute = event.url;
         this.updatePageTitle(event.url);
         this.sidebarOpen = false;
       });
   }
 
   private updatePageTitle(url: string): void {
+    // Handle component parameters special case
+    if (url.includes('/components/parameters')) {
+      this.pageTitle = 'Component Parameters';
+      return;
+    }
+    
+    // Handle component with ID
+    if (url.startsWith('/components/') && !url.includes('/components/inspection-points') && !url.includes('/components/asset-points')) {
+      this.pageTitle = 'Components';
+      return;
+    }
+
     const route = url.split('/')[1] || 'dashboard';
     this.pageTitle = this.pageNames[route] || 'CES Inspection System';
   }

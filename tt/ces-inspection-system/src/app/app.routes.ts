@@ -18,10 +18,11 @@ export const routes: Routes = [
   { path: 'locations', component: TerminalLocationsComponent },
   { path: 'templates', component: ITPTemplatesComponent },
   { path: 'jobs', component: InspectionJobsComponent },
-  { path: 'components', component: ComponentMasterComponent },
-  { path: 'components/:componentId', component: ComponentMasterComponent },
+  // Component routes - specific routes must come before parameterized routes
   { path: 'components/inspection-points', component: ComponentInspectionPointsComponent },
   { path: 'components/asset-points', component: AssetComponentPointsComponent },
   { path: 'components/parameters', component: ComponentParametersComponent },
+  { path: 'components', component: ComponentMasterComponent },
+  { path: 'components/:componentId', component: ComponentMasterComponent },
   { path: '**', redirectTo: '/dashboard' }
 ];
