@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { ITPTemplate, InspectionTask, ControlPoint } from '../models';
+import { ITPTemplate, InspectionPoint, ControlPoint } from '../models';
 
 @Injectable({
   providedIn: 'root'
@@ -9,10 +9,9 @@ export class ITPTemplateService {
   private templates: ITPTemplate[] = [];
   private templatesSubject = new BehaviorSubject<ITPTemplate[]>([]);
   public templates$ = this.templatesSubject.asObservable();
-
-  private tasks: InspectionTask[] = [];
-  private tasksSubject = new BehaviorSubject<InspectionTask[]>([]);
-  public tasks$ = this.tasksSubject.asObservable();
+  private points: InspectionPoint[] = [];
+  private pointsSubject = new BehaviorSubject<InspectionPoint[]>([]);
+  public points$ = this.pointsSubject.asObservable();
 
   private controlPoints: ControlPoint[] = [];
   private controlPointsSubject = new BehaviorSubject<ControlPoint[]>([]);
@@ -48,45 +47,71 @@ export class ITPTemplateService {
         isActive: true,
         description: 'Semi-annual electrical inspection for Rubber Tyred Gantries'
       }
-    ];
-
-    this.tasks = [
+    ];    this.points = [
       {
-        taskId: 'tsk-001',
+        pointId: 'pt-001',
         templateId: 'tpl-001',
         sequenceOrder: 1,
-        taskDescription: 'Visual inspection of brake system',
+        pointDescription: 'Visual inspection of brake system',
         componentCategory: 'Mechanical',
         inspectionMethod: 'Visual',
         isMandatory: true,
-        taskThreshold: 'Brake pad thickness: Minimum 5mm thickness required'
+        pointThreshold: 'Brake pad thickness: Minimum 5mm thickness required',
+        applicableToComponent: false,
+        applicableToAsset: true
       },
       {
-        taskId: 'tsk-002',
+        pointId: 'pt-002',
         templateId: 'tpl-001',
         sequenceOrder: 2,
-        taskDescription: 'Ultrasonic measurement of chain wear',
+        pointDescription: 'Ultrasonic measurement of chain wear',
         componentCategory: 'Mechanical',
         inspectionMethod: 'Ultrasonic',
         isMandatory: true,
-        taskThreshold: 'Chain elongation: Less than 2% elongation allowed'
+        pointThreshold: 'Chain elongation: Less than 2% elongation allowed',
+        applicableToComponent: true,
+        applicableToAsset: true
       },
       {
-        taskId: 'tsk-003',
+        pointId: 'pt-003',
         templateId: 'tpl-002',
         sequenceOrder: 1,
-        taskDescription: 'Electrical safety test',
+        pointDescription: 'Electrical safety test',
         componentCategory: 'Electrical',
         inspectionMethod: 'Functional Test',
         isMandatory: true,
-        taskThreshold: 'Insulation resistance: Minimum 1 MΩ at 500V DC'
+        pointThreshold: 'Insulation resistance: Minimum 1 MΩ at 500V DC',
+        applicableToComponent: true,
+        applicableToAsset: true
+      },
+      {
+        pointId: 'pt-004',
+        templateId: 'tpl-002',
+        sequenceOrder: 2,
+        pointDescription: 'Motor bearing vibration analysis',
+        componentCategory: 'Electrical',
+        inspectionMethod: 'Ultrasonic',
+        isMandatory: false,
+        pointThreshold: 'Vibration: Less than 7.1 mm/s',
+        applicableToComponent: true,
+        applicableToAsset: false
+      },
+      {
+        pointId: 'pt-005',
+        templateId: 'tpl-001',
+        sequenceOrder: 3,
+        pointDescription: 'Hydraulic pump pressure test',
+        componentCategory: 'Hydraulic',
+        inspectionMethod: 'Functional Test',
+        isMandatory: true,
+        pointThreshold: 'Pressure: 1-250 bar',
+        applicableToComponent: true,
+        applicableToAsset: false
       }
-    ];
-
-    this.controlPoints = [
+    ];this.controlPoints = [
       {
         controlId: 'cp-001',
-        taskId: 'tsk-001',
+        pointId: 'pt-001',
         pointType: 'H',
         description: 'Brake pad thickness',
         criteria: 'Minimum 5mm thickness required',
@@ -94,16 +119,14 @@ export class ITPTemplateService {
       },
       {
         controlId: 'cp-002',
-        taskId: 'tsk-002',
+        pointId: 'pt-002',
         pointType: 'W',
         description: 'Chain elongation',
         criteria: 'Less than 2% elongation',
         frequencyDays: 365
       }
-    ];
-
-    this.templatesSubject.next(this.templates);
-    this.tasksSubject.next(this.tasks);
+    ];    this.templatesSubject.next(this.templates);
+    this.pointsSubject.next(this.points);
     this.controlPointsSubject.next(this.controlPoints);
   }
 
@@ -133,41 +156,40 @@ export class ITPTemplateService {
     this.templates = this.templates.filter(t => t.templateId !== id);
     this.templatesSubject.next([...this.templates]);
   }
-
-  // Task Methods
-  getTasksByTemplate(templateId: string): InspectionTask[] {
-    return this.tasks.filter(t => t.templateId === templateId);
+  // Inspection Point Methods
+  getPointsByTemplate(templateId: string): InspectionPoint[] {
+    return this.points.filter(p => p.templateId === templateId);
   }
 
-  getTasks(): Observable<InspectionTask[]> {
-    return this.tasks$;
+  getPoints(): Observable<InspectionPoint[]> {
+    return this.points$;
   }
 
-  getTaskById(id: string): InspectionTask | undefined {
-    return this.tasks.find(t => t.taskId === id);
+  getPointById(id: string): InspectionPoint | undefined {
+    return this.points.find(p => p.pointId === id);
   }
 
-  addTask(task: InspectionTask): void {
-    this.tasks.push(task);
-    this.tasksSubject.next([...this.tasks]);
+  addPoint(point: InspectionPoint): void {
+    this.points.push(point);
+    this.pointsSubject.next([...this.points]);
   }
 
-  updateTask(task: InspectionTask): void {
-    const index = this.tasks.findIndex(t => t.taskId === task.taskId);
+  updatePoint(point: InspectionPoint): void {
+    const index = this.points.findIndex(p => p.pointId === point.pointId);
     if (index !== -1) {
-      this.tasks[index] = task;
-      this.tasksSubject.next([...this.tasks]);
+      this.points[index] = point;
+      this.pointsSubject.next([...this.points]);
     }
   }
 
-  deleteTask(id: string): void {
-    this.tasks = this.tasks.filter(t => t.taskId !== id);
-    this.tasksSubject.next([...this.tasks]);
+  deletePoint(id: string): void {
+    this.points = this.points.filter(p => p.pointId !== id);
+    this.pointsSubject.next([...this.points]);
   }
 
   // Control Point Methods
-  getControlPointsByTask(taskId: string): ControlPoint[] {
-    return this.controlPoints.filter(cp => cp.taskId === taskId);
+  getControlPointsByPoint(pointId: string): ControlPoint[] {
+    return this.controlPoints.filter(cp => cp.pointId === pointId);
   }
 
   getControlPoints(): Observable<ControlPoint[]> {

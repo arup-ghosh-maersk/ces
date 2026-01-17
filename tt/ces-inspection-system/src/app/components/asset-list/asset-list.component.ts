@@ -88,39 +88,159 @@ import { Observable } from 'rxjs';
               <div class="info-item">
                 <label>Warranty Expiry</label>
                 <span>{{ (selectedAsset.warrantyExpiry | date:'MMM dd, yyyy') || 'N/A' }}</span>
-              </div>
-              <div class="info-item">
+              </div>              <div class="info-item">
                 <label>Location ID</label>
                 <span>{{ selectedAsset.locationId }}</span>
               </div>
             </div>
-          </div>
-
-          <div class="info-section">
-            <h4>Sub-Components</h4>
-            <div class="subcomponents-container" *ngIf="assetComponents && assetComponents.length > 0">
-              <div *ngFor="let component of assetComponents" class="component-card">
-                <div class="component-header">
-                  <h5>{{ component.componentName }}</h5>
-                  <span [ngClass]="'badge badge-' + component.category.toLowerCase()">{{ component.category }}</span>
-                </div>
-                <div class="component-details">
-                  <p><strong>Component ID:</strong> {{ component.componentId }}</p>
-                  <p><strong>Code:</strong> {{ component.componentCode }}</p>
-                  <p><strong>Description:</strong> {{ component.description || 'N/A' }}</p>
-                  <p><strong>Manufacturer:</strong> {{ component.manufacturer || 'N/A' }}</p>
-                  <p><strong>Model Number:</strong> {{ component.modelNumber || 'N/A' }}</p>
-                  <p><strong>Criticality:</strong> <span [ngClass]="'badge badge-' + component.criticality.toLowerCase()">{{ component.criticality }}</span></p>
-                  <p><strong>Maintenance Interval:</strong> {{ component.maintenanceIntervalDays || 'N/A' }} days</p>
-                  <p *ngIf="component.lastMaintenanceDate"><strong>Last Maintenance:</strong> {{ component.lastMaintenanceDate | date:'MMM dd, yyyy' }}</p>
-                  <p *ngIf="component.nextMaintenanceDate"><strong>Next Maintenance:</strong> {{ component.nextMaintenanceDate | date:'MMM dd, yyyy' }}</p>
-                </div>
+          </div>          <div class="info-section" *ngIf="selectedAsset.diagramUrl">
+            <h4>2D Asset Drawing</h4>
+            <div class="diagram-container">
+              <img [src]="selectedAsset.diagramUrl" [alt]="'2D Drawing for ' + selectedAsset.assetId" class="diagram-image">
+              <div class="diagram-info">
+                <p><strong>Asset:</strong> {{ selectedAsset.assetId }}</p>
+                <p><strong>Type:</strong> {{ selectedAsset.assetType }}</p>
               </div>
             </div>
-            <div class="no-components" *ngIf="!assetComponents || assetComponents.length === 0">
-              <p>No sub-components found for this asset</p>
-            </div>
           </div>
+          <div class="info-section" *ngIf="!selectedAsset.diagramUrl">
+            <h4>2D Asset Drawing</h4>
+            <div class="no-diagram">
+              <p>No 2D drawing available for this asset</p>
+              <small>Add a diagram URL to display technical drawings</small>
+            </div>
+          </div><div class="info-section">
+            <h4>Component Tree Structure</h4>
+            <div class="tree-container" *ngIf="componentTree && componentTree.length > 0">
+              <div class="tree">
+                <ng-container *ngFor="let component of componentTree">
+                  <ng-container *ngTemplateOutlet="treeNode; context: {$implicit: component, level: 0}"></ng-container>
+                </ng-container>
+              </div>
+            </div>
+            <div class="no-components" *ngIf="!componentTree || componentTree.length === 0">
+              <p>No components found for this asset</p>
+            </div>
+          </div>          <ng-template #treeNode let-component let-level="level">
+            <div class="tree-node" [style.margin-left.px]="level * 20">
+              <div class="node-content" (click)="selectComponent(component)" [class.selected]="selectedComponentId === component.componentId">
+                <button class="expand-btn" 
+                        *ngIf="hasChildren(component)"
+                        (click)="toggleNode(component); $event.stopPropagation()"
+                        [class.expanded]="isExpanded(component)">
+                  <span class="arrow">{{ isExpanded(component) ? '▼' : '▶' }}</span>
+                </button>
+                <span class="no-children-icon" *ngIf="!hasChildren(component)">•</span>
+                
+                <div class="node-info">
+                  <span class="component-name">{{ component.componentName }}</span>
+                  <span [ngClass]="'badge badge-' + component.category.toLowerCase()">{{ component.category }}</span>
+                  <span [ngClass]="'badge badge-' + component.criticality.toLowerCase()">{{ component.criticality }}</span>
+                </div>
+              </div><div class="node-details" [class.always-visible]="true" *ngIf="selectedComponentId === component.componentId">
+                <div class="details-container">
+                  <div class="detail-section">
+                    <h6>Basic Information</h6>
+                    <div class="detail-grid">
+                      <div class="detail-item">
+                        <span class="label">Component ID:</span>
+                        <span class="value">{{ component.componentId }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="label">Code:</span>
+                        <span class="value">{{ component.componentCode }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="label">Category:</span>
+                        <span class="value">{{ component.category }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="label">Asset Type:</span>
+                        <span class="value">{{ component.assetType }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="detail-section">
+                    <h6>Technical Specifications</h6>
+                    <div class="detail-grid">
+                      <div class="detail-item">
+                        <span class="label">Manufacturer:</span>
+                        <span class="value">{{ component.manufacturer || 'N/A' }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="label">Model Number:</span>
+                        <span class="value">{{ component.modelNumber || 'N/A' }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="label">Serial Number:</span>
+                        <span class="value">{{ component.serialNumber || 'N/A' }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="label">Warranty Expiry:</span>
+                        <span class="value">{{ (component.warrantyExpiry | date:'MMM dd, yyyy') || 'N/A' }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="detail-section">
+                    <h6>Maintenance Information</h6>
+                    <div class="detail-grid">
+                      <div class="detail-item">
+                        <span class="label">Maintenance Interval:</span>
+                        <span class="value">{{ component.maintenanceIntervalDays || 'N/A' }} days</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="label">Last Maintenance:</span>
+                        <span class="value">{{ (component.lastMaintenanceDate | date:'MMM dd, yyyy') || 'N/A' }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="label">Next Maintenance:</span>
+                        <span class="value">{{ (component.nextMaintenanceDate | date:'MMM dd, yyyy') || 'N/A' }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="label">Status:</span>
+                        <span class="value" [ngClass]="component.isActive ? 'status-active' : 'status-inactive'">
+                          {{ component.isActive ? 'Active' : 'Inactive' }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="detail-section" *ngIf="component.description">
+                    <h6>Description</h6>
+                    <p class="description">{{ component.description }}</p>
+                  </div>                  <div class="detail-section" *ngIf="component.specifications">
+                    <h6>Specifications</h6>
+                    <p class="description">{{ component.specifications }}</p>
+                  </div>                  <div class="detail-section" *ngIf="component.diagramUrl">
+                    <h6>2D Component Drawing</h6>
+                    <div class="component-diagram-container">
+                      <img [src]="component.diagramUrl" [alt]="'2D Drawing for ' + component.componentName" class="component-diagram-image">
+                      <div class="diagram-metadata">
+                        <p><strong>Component:</strong> {{ component.componentName }}</p>
+                        <p><strong>Code:</strong> {{ component.componentCode }}</p>
+                        <p><strong>Category:</strong> {{ component.category }}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="detail-section" *ngIf="!component.diagramUrl">
+                    <h6>2D Component Drawing</h6>
+                    <div class="no-component-diagram">
+                      <p>No 2D drawing available for this component</p>
+                      <small>Add a diagram URL to display technical drawings</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="children" *ngIf="isExpanded(component) && hasChildren(component)">
+                <ng-container *ngFor="let child of getChildren(component)">
+                  <ng-container *ngTemplateOutlet="treeNode; context: {$implicit: child, level: level + 1}"></ng-container>
+                </ng-container>
+              </div>
+            </div>
+          </ng-template>
         </div>
       </div>
     </div>
@@ -326,15 +446,78 @@ import { Observable } from 'rxjs';
       font-size: 13px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-    }
-
-    .info-item span {
+    }    .info-item span {
       color: #333;
       font-size: 14px;
       padding: 8px;
       background-color: white;
       border-radius: 4px;
       border: 1px solid #ddd;
+    }    .diagram-container {
+      width: 100%;
+      max-width: 700px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 20px;
+      background-color: #fafafa;
+      min-height: 300px;
+    }
+
+    .diagram-image {
+      display: block;
+      width: auto;
+      max-width: 100%;
+      max-height: 500px;
+      height: auto;
+      object-fit: contain;
+      border-radius: 4px;
+      background: white;
+      padding: 10px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .diagram-info {
+      width: 100%;
+      padding: 10px;
+      background: white;
+      border-radius: 4px;
+      border-left: 3px solid #7b1fa2;
+      text-align: center;
+    }
+
+    .diagram-info p {
+      margin: 5px 0;
+      font-size: 12px;
+      color: #555;
+    }
+
+    .diagram-info strong {
+      color: #7b1fa2;
+    }
+
+    .no-diagram {
+      width: 100%;
+      padding: 40px 20px;
+      background: linear-gradient(135deg, #f5f5f5 0%, #fafafa 100%);
+      border-radius: 6px;
+      border: 2px dashed #ddd;
+      text-align: center;
+      color: #999;
+    }
+
+    .no-diagram p {
+      margin: 10px 0 5px 0;
+      font-size: 14px;
+    }
+
+    .no-diagram small {
+      font-size: 12px;
+      color: #bbb;
     }
 
     .subcomponents-container {
@@ -383,14 +566,298 @@ import { Observable } from 'rxjs';
 
     .component-details strong {
       color: #333;
-    }
-
-    .no-components {
+    }    .no-components {
       text-align: center;
       padding: 40px;
       color: #999;
       background-color: #f9f9f9;
       border-radius: 6px;
+    }    .tree-container {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 15px;
+    }
+
+    .tree {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+    }
+
+    .tree-node {
+      margin: 8px 0;
+    }    .node-content {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      background: #f9f9f9;
+      border-radius: 4px;
+      border-left: 3px solid #7b1fa2;
+      transition: background-color 0.2s ease;
+      cursor: pointer;
+    }
+
+    .node-content:hover {
+      background-color: #f0f0f0;
+    }
+
+    .node-content.selected {
+      background-color: #e3f2fd;
+      border-left: 3px solid #1976d2;
+    }
+
+    .expand-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0 5px;
+      color: #7b1fa2;
+      font-size: 12px;
+      font-weight: bold;
+      min-width: 20px;
+      transition: color 0.2s ease;
+    }
+
+    .expand-btn:hover {
+      color: #5a1380;
+    }
+
+    .expand-btn .arrow {
+      display: inline-block;
+      transition: transform 0.2s ease;
+    }
+
+    .no-children-icon {
+      display: inline-block;
+      width: 20px;
+      text-align: center;
+      color: #ddd;
+    }
+
+    .component-name {
+      font-weight: bold;
+      color: #333;
+      margin-right: 10px;
+      flex: 1;
+    }    .node-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      cursor: pointer;
+      padding: 5px;
+      border-radius: 4px;
+      transition: background-color 0.2s ease;
+    }
+
+    .node-info:hover {
+      background-color: rgba(123, 31, 162, 0.1);
+    }    .node-details {
+      margin: 10px 0 10px 20px;
+      padding: 15px;
+      background: #f5f5f5;
+      border-radius: 4px;
+      border-left: 3px solid #7b1fa2;
+      animation: slideDown 0.3s ease-out;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .details-container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .detail-section {
+      background: white;
+      padding: 12px;
+      border-radius: 4px;
+      border-left: 3px solid #7b1fa2;
+    }
+
+    .detail-section h6 {
+      margin: 0 0 10px 0;
+      color: #7b1fa2;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+      margin-bottom: 0;
+    }
+
+    .detail-item {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .detail-item .label {
+      font-weight: bold;
+      color: #7b1fa2;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .detail-item .value {
+      color: #555;
+      font-size: 13px;
+      padding: 6px 8px;
+      background: #f9f9f9;
+      border-radius: 3px;
+      border: 1px solid #e0e0e0;
+    }
+
+    .detail-item .status-active {
+      color: #2e7d32;
+      font-weight: bold;
+    }
+
+    .detail-item .status-inactive {
+      color: #c62828;
+      font-weight: bold;
+    }    .description {
+      color: #666;
+      font-size: 13px;
+      margin: 0;
+      padding: 8px;
+      background: #f9f9f9;
+      border-radius: 3px;
+      border-left: 2px solid #7b1fa2;
+      line-height: 1.5;
+    }
+
+    .subcomponents-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .subcomponent-item {
+      background: #f9f9f9;
+      padding: 10px;
+      border-radius: 4px;
+      border: 1px solid #e0e0e0;
+      border-left: 3px solid #7b1fa2;
+    }
+
+    .subcomp-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .subcomp-name {
+      font-weight: bold;
+      color: #333;
+      flex: 1;
+    }
+
+    .subcomp-details {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      font-size: 12px;
+    }
+
+    .detail-label {
+      font-weight: bold;
+      color: #7b1fa2;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }    .detail-value {
+      color: #555;
+      padding: 3px 5px;
+      background: white;
+      border-radius: 2px;
+      border: 1px solid #ddd;
+    }    .component-diagram-container {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 15px;
+      background-color: #fafafa;
+      min-height: 250px;
+    }
+
+    .component-diagram-image {
+      display: block;
+      width: auto;
+      max-width: 100%;
+      max-height: 400px;
+      height: auto;
+      object-fit: contain;
+      border-radius: 4px;
+      background: white;
+      padding: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .diagram-metadata {
+      width: 100%;
+      padding: 10px;
+      background: white;
+      border-radius: 4px;
+      border-left: 3px solid #7b1fa2;
+      font-size: 11px;
+    }
+
+    .diagram-metadata p {
+      margin: 4px 0;
+      color: #555;
+    }
+
+    .diagram-metadata strong {
+      color: #7b1fa2;
+      font-weight: 600;
+    }
+
+    .no-component-diagram {
+      width: 100%;
+      padding: 30px 15px;
+      background: linear-gradient(135deg, #f5f5f5 0%, #fafafa 100%);
+      border-radius: 6px;
+      border: 2px dashed #ddd;
+      text-align: center;
+      color: #999;
+    }
+
+    .no-component-diagram p {
+      margin: 8px 0 3px 0;
+      font-size: 13px;
+    }    .no-component-diagram small {
+      font-size: 11px;
+      color: #bbb;
+    }
+
+    .children {
+      margin-left: 10px;
+      padding: 8px 0 8px 8px;
+      border-left: 2px dotted #7b1fa2;
     }
 
     @media (max-width: 768px) {
@@ -419,6 +886,9 @@ export class AssetListComponent implements OnInit {
   selectedAssetId: string | null = null;
   selectedAsset: Asset | null = null;
   assetComponents: ComponentMaster[] = [];
+  componentTree: ComponentMaster[] = [];
+  expandedNodes: Set<string> = new Set();
+  selectedComponentId: string | null = null;
 
   constructor(
     private assetService: AssetService,
@@ -448,19 +918,65 @@ export class AssetListComponent implements OnInit {
     this.selectedAsset = asset;
     this.loadAssetComponents(asset.assetId);
   }
-
   closeDetails(): void {
     this.selectedAssetId = null;
     this.selectedAsset = null;
     this.assetComponents = [];
-  }
-
-  private loadAssetComponents(assetId: string): void {
+    this.componentTree = [];
+    this.expandedNodes.clear();
+    this.selectedComponentId = null;
+  }  private loadAssetComponents(assetId: string): void {
     // Load components for this asset from the service
     const allComponents$ = this.componentService.getComponents();
     allComponents$.subscribe(components => {
       this.assetComponents = components.filter(comp => comp.assetId === assetId);
+      this.buildComponentTree(this.assetComponents);
+      // Start with root components expanded to show the tree structure
+      this.expandedNodes.clear();
+      this.componentTree.forEach(root => {
+        this.expandedNodes.add(root.componentId);
+      });
     });
+  }
+
+  private buildComponentTree(components: ComponentMaster[]): void {
+    // Build tree structure with parent-child relationships
+    this.componentTree = components.filter(comp => !comp.parentComponentId);
+  }
+
+  hasChildren(component: ComponentMaster): boolean {
+    return this.assetComponents.some(comp => comp.parentComponentId === component.componentId);
+  }
+
+  getChildren(component: ComponentMaster): ComponentMaster[] {
+    return this.assetComponents.filter(comp => comp.parentComponentId === component.componentId);
+  }
+  toggleNode(component: ComponentMaster): void {
+    if (this.expandedNodes.has(component.componentId)) {
+      this.expandedNodes.delete(component.componentId);
+    } else {
+      // Close all sibling nodes at the same level
+      const siblings = this.assetComponents.filter(comp => comp.parentComponentId === component.parentComponentId);
+      siblings.forEach(sibling => {
+        if (sibling.componentId !== component.componentId) {
+          this.expandedNodes.delete(sibling.componentId);
+        }
+      });
+      // Open the clicked node
+      this.expandedNodes.add(component.componentId);
+    }
+  }
+  isExpanded(component: ComponentMaster): boolean {
+    return this.expandedNodes.has(component.componentId);
+  }
+
+  selectComponent(component: ComponentMaster): void {
+    // Toggle the selected component - if it's already selected, deselect it
+    if (this.selectedComponentId === component.componentId) {
+      this.selectedComponentId = null;
+    } else {
+      this.selectedComponentId = component.componentId;
+    }
   }
 }
 

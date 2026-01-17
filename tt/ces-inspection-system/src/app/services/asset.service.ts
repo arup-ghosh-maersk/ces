@@ -32,9 +32,7 @@ export class AssetService {
         terminalCode: 'YRD_BLK_A',
         gpsCoordinates: '1.3650,103.8740'
       }
-    ];
-
-    this.assets = [
+    ];    this.assets = [
       {
         assetId: 'asset-001',
         locationId: 'loc-001',
@@ -45,7 +43,8 @@ export class AssetService {
         modelNumber: 'DRF450-65H5',
         serialNumber: 'KLM2023001',
         acquisitionDate: new Date('2023-01-15'),
-        warrantyExpiry: new Date('2025-01-15')
+        warrantyExpiry: new Date('2025-01-15'),
+        diagramUrl: 'https://via.placeholder.com/700x500?text=STS-001+2D+Drawing'
       },
       {
         assetId: 'asset-002',
@@ -57,7 +56,8 @@ export class AssetService {
         modelNumber: 'LPS 500',
         serialNumber: 'LBR2023002',
         acquisitionDate: new Date('2023-03-20'),
-        warrantyExpiry: new Date('2025-03-20')
+        warrantyExpiry: new Date('2025-03-20'),
+        diagramUrl: 'https://via.placeholder.com/700x500?text=RTG-001+2D+Drawing'
       }
     ];
 

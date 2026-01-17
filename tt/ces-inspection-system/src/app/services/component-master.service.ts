@@ -15,8 +15,7 @@ export class ComponentMasterService {
   }
 
   private initializeMockData(): void {
-    this.components = [
-      {
+    this.components = [      {
         componentId: 'comp-001',
         componentCode: 'BOOM-STS-001',
         componentName: 'Boom Assembly',
@@ -33,9 +32,9 @@ export class ComponentMasterService {
         lastMaintenanceDate: new Date('2024-10-15'),
         nextMaintenanceDate: new Date('2025-01-15'),
         createdAt: new Date('2024-01-01'),
-        isActive: true
-      },
-      {
+        isActive: true,
+        diagramUrl: 'https://via.placeholder.com/400x300?text=Boom+Assembly+Drawing'
+      },      {
         componentId: 'comp-002',
         componentCode: 'MOTOR-STS-001',
         componentName: 'Main Drive Motor',
@@ -53,9 +52,49 @@ export class ComponentMasterService {
         lastMaintenanceDate: new Date('2024-09-01'),
         nextMaintenanceDate: new Date('2025-03-01'),
         createdAt: new Date('2024-01-05'),
-        isActive: true
+        isActive: true,
+        diagramUrl: 'https://via.placeholder.com/400x300?text=Drive+Motor+Drawing'
       },
       {
+        componentId: 'comp-002a',
+        componentCode: 'CONTROL-STS-001',
+        componentName: 'Motor Control System',
+        assetId: 'asset-001',
+        assetType: 'STS',
+        category: 'Electrical',
+        description: 'PLC and control system for boom assembly',
+        manufacturer: 'Siemens',
+        modelNumber: 'S7-1200F',
+        parentComponentId: 'comp-001',
+        criticality: 'High',
+        specifications: 'CPU module with digital I/O, 24V DC',
+        maintenanceIntervalDays: 365,
+        lastMaintenanceDate: new Date('2024-10-01'),
+        nextMaintenanceDate: new Date('2025-10-01'),
+        createdAt: new Date('2024-01-10'),
+        isActive: true,
+        diagramUrl: 'https://via.placeholder.com/400x300?text=Control+System+Drawing'
+      },
+      {
+        componentId: 'comp-002b',
+        componentCode: 'SENSOR-STS-001',
+        componentName: 'Boom Position Sensor',
+        assetId: 'asset-001',
+        assetType: 'STS',
+        category: 'Electrical',
+        description: 'LVDT sensor for boom angle feedback',
+        manufacturer: 'Temposonics',
+        modelNumber: 'TLE-0050',
+        parentComponentId: 'comp-001',
+        criticality: 'High',
+        specifications: 'Range: 0-5V analog output, ±5% linearity',
+        maintenanceIntervalDays: 180,
+        lastMaintenanceDate: new Date('2024-09-15'),
+        nextMaintenanceDate: new Date('2025-03-15'),
+        createdAt: new Date('2024-01-12'),
+        isActive: true,
+        diagramUrl: 'https://via.placeholder.com/400x300?text=Position+Sensor+Drawing'
+      },{
         componentId: 'comp-003',
         componentCode: 'PUMP-RTG-001',
         componentName: 'Hydraulic Pump System',
@@ -71,9 +110,9 @@ export class ComponentMasterService {
         lastMaintenanceDate: new Date('2024-08-20'),
         nextMaintenanceDate: new Date('2024-12-20'),
         createdAt: new Date('2024-02-01'),
-        isActive: true
-      },
-      {
+        isActive: true,
+        diagramUrl: 'https://via.placeholder.com/400x300?text=Hydraulic+Pump+Drawing'
+      },      {
         componentId: 'comp-004',
         componentCode: 'PISTON-HYD-001',
         componentName: 'Pump Piston Assembly',
@@ -90,9 +129,9 @@ export class ComponentMasterService {
         lastMaintenanceDate: new Date('2024-09-15'),
         nextMaintenanceDate: new Date('2024-12-15'),
         createdAt: new Date('2024-02-10'),
-        isActive: true
-      },
-      {
+        isActive: true,
+        diagramUrl: 'https://via.placeholder.com/400x300?text=Piston+Assembly+Drawing'
+      },      {
         componentId: 'comp-005',
         componentCode: 'SEAL-HYD-001',
         componentName: 'Pump Seal Kit',
@@ -109,9 +148,9 @@ export class ComponentMasterService {
         lastMaintenanceDate: new Date('2024-08-01'),
         nextMaintenanceDate: new Date('2025-02-01'),
         createdAt: new Date('2024-02-15'),
-        isActive: true
-      },
-      {
+        isActive: true,
+        diagramUrl: 'https://via.placeholder.com/400x300?text=Seal+Kit+Drawing'
+      },      {
         componentId: 'comp-006',
         componentCode: 'WHEEL-RTG-001',
         componentName: 'Main Bogie Wheel Assembly',
@@ -127,9 +166,9 @@ export class ComponentMasterService {
         lastMaintenanceDate: new Date('2024-11-01'),
         nextMaintenanceDate: new Date('2024-12-31'),
         createdAt: new Date('2024-03-01'),
-        isActive: true
-      },
-      {
+        isActive: true,
+        diagramUrl: 'https://via.placeholder.com/400x300?text=Bogie+Wheel+Drawing'
+      },      {
         componentId: 'comp-007',
         componentCode: 'BEARING-RTG-001',
         componentName: 'Wheel Hub Bearing',
@@ -146,9 +185,9 @@ export class ComponentMasterService {
         lastMaintenanceDate: new Date('2024-10-15'),
         nextMaintenanceDate: new Date('2025-01-15'),
         createdAt: new Date('2024-03-05'),
-        isActive: true
-      },
-      {
+        isActive: true,
+        diagramUrl: 'https://via.placeholder.com/400x300?text=Bearing+Drawing'
+      },      {
         componentId: 'comp-008',
         componentCode: 'TYRE-RTG-001',
         componentName: 'Wheel Tyre',
@@ -165,7 +204,8 @@ export class ComponentMasterService {
         lastMaintenanceDate: new Date('2024-11-01'),
         nextMaintenanceDate: new Date('2025-05-01'),
         createdAt: new Date('2024-03-10'),
-        isActive: true
+        isActive: true,
+        diagramUrl: 'https://via.placeholder.com/400x300?text=Tyre+Drawing'
       },
       {
         componentId: 'comp-009',
@@ -185,7 +225,8 @@ export class ComponentMasterService {
         lastMaintenanceDate: new Date('2024-01-15'),
         nextMaintenanceDate: new Date('2025-01-15'),
         createdAt: new Date('2024-04-01'),
-        isActive: true
+        isActive: true,
+        diagramUrl: 'https://via.placeholder.com/400x300?text=PLC+Drawing'
       },
       {
         componentId: 'comp-010',
@@ -204,7 +245,8 @@ export class ComponentMasterService {
         lastMaintenanceDate: new Date('2024-06-01'),
         nextMaintenanceDate: new Date('2025-06-01'),
         createdAt: new Date('2024-04-05'),
-        isActive: true
+        isActive: true,
+        diagramUrl: 'https://via.placeholder.com/400x300?text=Cable+Harness+Drawing'
       }
     ];
     this.componentsSubject.next(this.components);

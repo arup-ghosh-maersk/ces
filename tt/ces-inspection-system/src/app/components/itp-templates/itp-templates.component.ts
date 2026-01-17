@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ITPTemplateService } from '../../services/itp-template.service';
-import { ITPTemplate, InspectionTask } from '../../models';
+import { ITPTemplate, InspectionPoint } from '../../models';
 import { Observable } from 'rxjs';
 
 @Component({
@@ -42,47 +42,45 @@ import { Observable } from 'rxjs';
             </tr>
           </tbody>
         </table>
-      </div>
-
-      <div class="hierarchy-section" *ngIf="selectedTemplateId">
+      </div>      <div class="hierarchy-section" *ngIf="selectedTemplateId">
         <div class="template-header">
-          <h3>Linked Inspection Tasks</h3>
+          <h3>Linked Inspection Points</h3>
           <p class="info-text">Template: <strong>{{ getSelectedTemplateName() }}</strong></p>
         </div>
         
         <div class="hierarchy-view">
-          <div *ngFor="let task of getTasksByTemplate(selectedTemplateId)" class="task-card">
-            <div class="task-header">
-              <span class="sequence">{{ task.sequenceOrder }}</span>
-              <div class="task-info">
-                <h4>{{ task.taskDescription }}</h4>
-                <div class="task-meta">
-                  <span class="badge">{{ task.componentCategory }}</span>
-                  <span class="badge">{{ task.inspectionMethod }}</span>
-                  <span [ngClass]="task.isMandatory ? 'badge-mandatory' : 'badge-optional'">
-                    {{ task.isMandatory ? 'Mandatory' : 'Optional' }}
+          <div *ngFor="let point of getPointsByTemplate(selectedTemplateId)" class="point-card">
+            <div class="point-header">
+              <span class="sequence">{{ point.sequenceOrder }}</span>
+              <div class="point-info">
+                <h4>{{ point.pointDescription }}</h4>
+                <div class="point-meta">
+                  <span class="badge">{{ point.componentCategory }}</span>
+                  <span class="badge">{{ point.inspectionMethod }}</span>
+                  <span [ngClass]="point.isMandatory ? 'badge-mandatory' : 'badge-optional'">
+                    {{ point.isMandatory ? 'Mandatory' : 'Optional' }}
                   </span>
                 </div>
               </div>
             </div>
-            <div class="task-threshold" *ngIf="task.taskThreshold">
-              <h5>Task Threshold</h5>
-              <p>{{ task.taskThreshold }}</p>
+            <div class="point-threshold" *ngIf="point.pointThreshold">
+              <h5>Point Threshold</h5>
+              <p>{{ point.pointThreshold }}</p>
             </div>
-            <button class="btn btn-sm btn-edit" (click)="editTask(task)">Edit Threshold</button>
+            <button class="btn btn-sm btn-edit" (click)="editPoint(point)">Edit Threshold</button>
           </div>
         </div>
 
-        <div class="add-task-section">
-          <h4>Add New Inspection Task</h4>
-          <form (ngSubmit)="addTaskToTemplate()" class="form-group">
+        <div class="add-point-section">
+          <h4>Add New Inspection Point</h4>
+          <form (ngSubmit)="addPointToTemplate()" class="form-group">
             <div class="form-row">
-              <input type="number" [(ngModel)]="newTask.sequenceOrder" name="sequenceOrder" placeholder="Sequence Order" class="form-control" required>
-              <input type="text" [(ngModel)]="newTask.taskDescription" name="taskDescription" placeholder="Task Description" class="form-control" required>
+              <input type="number" [(ngModel)]="newPoint.sequenceOrder" name="sequenceOrder" placeholder="Sequence Order" class="form-control" required>
+              <input type="text" [(ngModel)]="newPoint.pointDescription" name="pointDescription" placeholder="Point Description" class="form-control" required>
             </div>
             <div class="form-row">
-              <input type="text" [(ngModel)]="newTask.componentCategory" name="componentCategory" placeholder="Component Category" class="form-control" required>
-              <select [(ngModel)]="newTask.inspectionMethod" name="inspectionMethod" class="form-control" required>
+              <input type="text" [(ngModel)]="newPoint.componentCategory" name="componentCategory" placeholder="Component Category" class="form-control" required>
+              <select [(ngModel)]="newPoint.inspectionMethod" name="inspectionMethod" class="form-control" required>
                 <option value="">Select Inspection Method</option>
                 <option value="Visual">Visual</option>
                 <option value="Ultrasonic">Ultrasonic</option>
@@ -91,10 +89,10 @@ import { Observable } from 'rxjs';
               </select>
             </div>
             <div class="form-row">
-              <label><input type="checkbox" [(ngModel)]="newTask.isMandatory" name="isMandatory"> Mandatory Task</label>
-              <input type="text" [(ngModel)]="newTask.taskThreshold" name="taskThreshold" placeholder="Task Threshold/Criteria" class="form-control">
+              <label><input type="checkbox" [(ngModel)]="newPoint.isMandatory" name="isMandatory"> Mandatory Point</label>
+              <input type="text" [(ngModel)]="newPoint.pointThreshold" name="pointThreshold" placeholder="Point Threshold/Criteria" class="form-control">
             </div>
-            <button type="submit" class="btn btn-primary">Add Task</button>
+            <button type="submit" class="btn btn-primary">Add Point</button>
           </form>
         </div>
       </div>
@@ -450,17 +448,16 @@ import { Observable } from 'rxjs';
   `]
 })
 export class ITPTemplatesComponent implements OnInit {
-  templates$: Observable<ITPTemplate[]>;
-  selectedTemplateId: string | null = null;
+  templates$: Observable<ITPTemplate[]>;  selectedTemplateId: string | null = null;
   private allTemplates: ITPTemplate[] = [];
-  private allTasks: InspectionTask[] = [];
+  private allPoints: InspectionPoint[] = [];
 
   newTemplate: Partial<ITPTemplate> = {
     revisionNo: 1,
     isActive: true
   };
 
-  newTask: Partial<InspectionTask> = {
+  newPoint: Partial<InspectionPoint> = {
     isMandatory: true
   };
 
@@ -469,12 +466,12 @@ export class ITPTemplatesComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Cache all templates and tasks
+    // Cache all templates and points
     this.itpService.getTemplates().subscribe(templates => {
       this.allTemplates = templates;
     });
-    this.itpService.getTasks().subscribe(tasks => {
-      this.allTasks = tasks;
+    this.itpService.getPoints().subscribe(points => {
+      this.allPoints = points;
     });
   }
 
@@ -488,8 +485,8 @@ export class ITPTemplatesComponent implements OnInit {
     return template ? `${template.templateCode} - ${template.title}` : '';
   }
 
-  getTasksByTemplate(templateId: string): InspectionTask[] {
-    return this.allTasks.filter(t => t.templateId === templateId);
+  getPointsByTemplate(templateId: string): InspectionPoint[] {
+    return this.allPoints.filter(p => p.templateId === templateId);
   }
 
   addTemplate(): void {
@@ -514,40 +511,39 @@ export class ITPTemplatesComponent implements OnInit {
     this.newTemplate = { revisionNo: 1, isActive: true };
     alert('Template added successfully!');
   }
-
-  addTaskToTemplate(): void {
-    if (!this.selectedTemplateId || !this.newTask.taskDescription) {
-      alert('Please select a template and fill in task description');
+  addPointToTemplate(): void {
+    if (!this.selectedTemplateId || !this.newPoint.pointDescription) {
+      alert('Please select a template and fill in point description');
       return;
     }
 
     const maxSequence = Math.max(
       0,
-      ...this.getTasksByTemplate(this.selectedTemplateId).map(t => t.sequenceOrder)
-    );
-
-    const task: InspectionTask = {
-      taskId: 'tsk-' + Date.now(),
+      ...this.getPointsByTemplate(this.selectedTemplateId).map(p => p.sequenceOrder)
+    );    const point: InspectionPoint = {
+      pointId: 'pt-' + Date.now(),
       templateId: this.selectedTemplateId,
-      sequenceOrder: this.newTask.sequenceOrder || maxSequence + 1,
-      taskDescription: this.newTask.taskDescription!,
-      componentCategory: this.newTask.componentCategory || '',
-      inspectionMethod: this.newTask.inspectionMethod as any || 'Visual',
-      isMandatory: this.newTask.isMandatory || true,
-      taskThreshold: this.newTask.taskThreshold
+      sequenceOrder: this.newPoint.sequenceOrder || maxSequence + 1,
+      pointDescription: this.newPoint.pointDescription!,
+      componentCategory: this.newPoint.componentCategory || '',
+      inspectionMethod: this.newPoint.inspectionMethod as any || 'Visual',
+      isMandatory: this.newPoint.isMandatory || true,
+      pointThreshold: this.newPoint.pointThreshold,
+      applicableToComponent: false,
+      applicableToAsset: true
     };
 
-    this.itpService.addTask(task);
-    this.newTask = { isMandatory: true };
-    alert('Task added successfully!');
+    this.itpService.addPoint(point);
+    this.newPoint = { isMandatory: true };
+    alert('Point added successfully!');
   }
 
-  editTask(task: InspectionTask): void {
-    const newThreshold = prompt('Edit Task Threshold:', task.taskThreshold || '');
+  editPoint(point: InspectionPoint): void {
+    const newThreshold = prompt('Edit Point Threshold:', point.pointThreshold || '');
     if (newThreshold !== null) {
-      const updatedTask = { ...task, taskThreshold: newThreshold };
-      this.itpService.updateTask(updatedTask);
-      alert('Task threshold updated!');
+      const updatedPoint = { ...point, pointThreshold: newThreshold };
+      this.itpService.updatePoint(updatedPoint);
+      alert('Point threshold updated!');
     }
   }
 }

@@ -6,6 +6,9 @@ import { InspectionJobsComponent } from './components/inspection-jobs/inspection
 import { AssetSpecsComponent } from './components/asset-specs/asset-specs.component';
 import { ComponentMasterComponent } from './components/component-master/component-master.component';
 import { TerminalLocationsComponent } from './components/terminal-locations/terminal-locations.component';
+import { ComponentInspectionPointsComponent } from './components/component-inspection-points/component-inspection-points.component';
+import { AssetComponentPointsComponent } from './components/asset-component-points/asset-component-points.component';
+import { ComponentParametersComponent } from './components/component-parameters/component-parameters.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
@@ -16,5 +19,8 @@ export const routes: Routes = [
   { path: 'templates', component: ITPTemplatesComponent },
   { path: 'jobs', component: InspectionJobsComponent },
   { path: 'components', component: ComponentMasterComponent },
+  { path: 'components/inspection-points', component: ComponentInspectionPointsComponent },
+  { path: 'components/asset-points', component: AssetComponentPointsComponent },
+  { path: 'components/parameters', component: ComponentParametersComponent },
   { path: '**', redirectTo: '/dashboard' }
 ];

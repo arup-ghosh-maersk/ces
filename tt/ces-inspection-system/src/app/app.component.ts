@@ -8,10 +8,11 @@ import { filter } from 'rxjs/operators';
   standalone: true,
   imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule],
   template: `
-    <div class="app-container">
-      <nav class="sidebar" [class.open]="sidebarOpen">
-        <div class="sidebar-header">
-          <h1>CES</h1>
+    <div class="app-container">      <nav class="sidebar" [class.open]="sidebarOpen">        <div class="sidebar-header">
+          <div class="logo-section">
+            <img src="/maersk-logo.svg" alt="Maersk Logo" class="maersk-logo">
+            <h1>Crane Engineering Services</h1>
+          </div>
           <button class="hamburger" (click)="toggleSidebar()" aria-label="Toggle menu">
             <span></span>
             <span></span>
@@ -33,19 +34,16 @@ import { filter } from 'rxjs/operators';
               <span class="icon">🛠️</span>
               <span class="label">Admin Settings</span>
               <span class="arrow" [class.open]="adminOpen">&#9662;</span>
-            </div>
-            <ul class="admin-submenu" [class.open]="adminOpen" *ngIf="adminOpen">
-              <li><a routerLink="/assets" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+            </div>            <ul class="admin-submenu" [class.open]="adminOpen" *ngIf="adminOpen">              <li><a routerLink="/assets" routerLinkActive="active" (click)="closeSidebarOnMobile()">
                 <span class="icon">🏗️</span>
                 <span class="label">Assets</span>
-              </a></li>
-              <li><a routerLink="/components" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-                <span class="icon">⚙️</span>
-                <span class="label">Components</span>
-              </a></li>
-              <li><a routerLink="/locations" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+              </a></li>              <li><a routerLink="/locations" routerLinkActive="active" (click)="closeSidebarOnMobile()">
                 <span class="icon">📍</span>
                 <span class="label">Locations</span>
+              </a></li>
+              <li><a routerLink="/components/parameters" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+                <span class="icon">📌</span>
+                <span class="label">Component Parameters</span>
               </a></li>
               <li><a routerLink="/templates" routerLinkActive="active" (click)="closeSidebarOnMobile()">
                 <span class="icon">📋</span>
@@ -81,12 +79,10 @@ import { filter } from 'rxjs/operators';
       display: flex;
       height: 100vh;
       background-color: #f5f5f5;
-    }
-
-    .sidebar {
+    }    .sidebar {
       width: 250px;
-      background: #003D7A;
-      color: white;
+      background: white;
+      color: #333;
       padding: 20px;
       overflow-y: auto;
       transition: all 0.3s ease;
@@ -95,22 +91,37 @@ import { filter } from 'rxjs/operators';
       top: 0;
       height: 100vh;
       z-index: 1000;
-    }
-
-    .sidebar-header {
+    }    .sidebar-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 30px;
       padding-bottom: 20px;
-      border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+      border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+    }    .logo-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+    }
+
+    .maersk-logo {
+      height: 48px;
+      width: 48px;
+      object-fit: contain;
+      flex-shrink: 0;
     }
 
     .sidebar-header h1 {
       margin: 0;
-      font-size: 28px;
+      font-size: 16px;
       font-weight: bold;
-      letter-spacing: 2px;
+      letter-spacing: 0.5px;
+      color: #333;
+      line-height: 1.3;
+      display: flex;
+      align-items: center;
+      height: 48px;
     }
 
     .hamburger {
@@ -120,12 +131,10 @@ import { filter } from 'rxjs/operators';
       border: none;
       cursor: pointer;
       padding: 5px;
-    }
-
-    .hamburger span {
+    }    .hamburger span {
       width: 25px;
       height: 3px;
-      background-color: white;
+      background-color: #333;
       margin: 4px 0;
       transition: all 0.3s ease;
       border-radius: 2px;
@@ -139,14 +148,12 @@ import { filter } from 'rxjs/operators';
 
     .nav-menu li {
       margin-bottom: 10px;
-    }
-
-    .nav-menu a {
+    }    .nav-menu a {
       display: flex;
       align-items: center;
       gap: 12px;
       padding: 12px 15px;
-      color: rgba(255, 255, 255, 0.8);
+      color: #333;
       text-decoration: none;
       border-radius: 6px;
       transition: all 0.3s ease;
@@ -154,15 +161,15 @@ import { filter } from 'rxjs/operators';
     }
 
     .nav-menu a:hover {
-      background-color: rgba(255, 255, 255, 0.15);
-      color: white;
+      background-color: rgba(0, 0, 0, 0.05);
+      color: #003D7A;
     }
 
     .nav-menu a.active {
-      background-color: rgba(255, 255, 255, 0.25);
-      color: white;
+      background-color: rgba(0, 61, 122, 0.1);
+      color: #003D7A;
       font-weight: bold;
-      border-left: 4px solid white;
+      border-left: 4px solid #003D7A;
       padding-left: 11px;
     }
 
@@ -192,11 +199,9 @@ import { filter } from 'rxjs/operators';
       display: flex;
       flex-direction: column;
       height: 100vh;
-    }
-
-    .top-header {
+    }    .top-header {
       background: white;
-      padding: 15px 25px;
+      padding: 0 25px;
       border-bottom: 1px solid #ddd;
       display: flex;
       align-items: center;
@@ -207,13 +212,12 @@ import { filter } from 'rxjs/operators';
       right: 0;
       left: 250px;
       z-index: 500;
-      height: 60px;
-    }
-
-    .header-left {
+      height: 48px;
+    }.header-left {
       display: flex;
       align-items: center;
       gap: 15px;
+      height: 100%;
     }
 
     .sidebar-toggle {
@@ -239,12 +243,13 @@ import { filter } from 'rxjs/operators';
       color: #333;
       font-size: 22px;
       font-weight: 600;
-    }
-
-    .main-content {
+      display: flex;
+      align-items: center;
+      height: 100%;
+    }    .main-content {
       flex: 1;
       overflow-y: auto;
-      margin-top: 60px;
+      margin-top: 48px;
       padding: 20px;
     }
 
@@ -311,11 +316,9 @@ import { filter } from 'rxjs/operators';
 
       .page-title {
         font-size: 18px;
-      }
-
-      .main-content {
+      }      .main-content {
         padding: 10px;
-        margin-top: 56px;
+        margin-top: 48px;
       }
     }
 
@@ -338,14 +341,12 @@ import { filter } from 'rxjs/operators';
 
     .admin-settings {
       margin-bottom: 10px;
-    }
-
-    .admin-header {
+    }    .admin-header {
       display: flex;
       align-items: center;
       gap: 12px;
       padding: 12px 15px;
-      color: rgba(255, 255, 255, 0.8);
+      color: #333;
       border-radius: 6px;
       cursor: pointer;
       transition: background 0.3s;
@@ -354,8 +355,8 @@ import { filter } from 'rxjs/operators';
     }
 
     .admin-header:hover {
-      background-color: rgba(255,255,255,0.15);
-      color: white;
+      background-color: rgba(0,0,0,0.05);
+      color: #003D7A;
     }
 
     .admin-header .arrow {
@@ -379,14 +380,12 @@ import { filter } from 'rxjs/operators';
       padding-left: 32px;
       display: flex;
       align-items: center;
-    }
-
-    .admin-submenu a {
+    }    .admin-submenu a {
       display: flex;
       align-items: center;
       gap: 12px;
       padding: 10px 0;
-      color: rgba(255,255,255,0.8);
+      color: #333;
       text-decoration: none;
       border-radius: 6px;
       font-size: 13px;
@@ -395,8 +394,8 @@ import { filter } from 'rxjs/operators';
     }
 
     .admin-submenu a:hover {
-      background-color: rgba(255,255,255,0.10);
-      color: white;
+      background-color: rgba(0,0,0,0.05);
+      color: #003D7A;
     }
 
     .admin-submenu .icon {
@@ -413,15 +412,13 @@ export class AppComponent implements OnInit {
   title = 'ces-inspection-system';
   sidebarOpen = false;
   pageTitle = 'Dashboard';
-  adminOpen = false;
-
-  private pageNames: { [key: string]: string } = {
+  adminOpen = false;  private pageNames: { [key: string]: string } = {
     'dashboard': 'Dashboard',
     'assets': 'Assets',
     'locations': 'Terminal Locations',
     'templates': 'ITP Templates',
     'jobs': 'Inspection Jobs',
-    'components': 'Component Master'
+    'components': 'Components'
   };
 
   constructor(private router: Router) {}

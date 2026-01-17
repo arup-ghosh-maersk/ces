@@ -43,13 +43,11 @@ export class InspectionJobService {
         status: 'Completed',
         notes: 'Routine annual inspection completed'
       }
-    ];
-
-    this.results = [
+    ];    this.results = [
       {
         resultId: 'res-001',
         jobId: 'job-001',
-        taskId: 'tsk-001',
+        pointId: 'pt-001',
         controlId: 'cp-001',
         result: 'Pass',
         observedValue: '6.5mm',

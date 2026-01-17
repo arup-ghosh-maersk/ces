@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { InspectionJobService } from '../../services/inspection-job.service';
 import { ITPTemplateService } from '../../services/itp-template.service';
-import { InspectionJob, IssueNCR, IssuePunchList, IssueDefect, InspectionResult, ITPTemplate, InspectionTask } from '../../models';
+import { InspectionJob, IssueNCR, IssuePunchList, IssueDefect, InspectionResult, ITPTemplate, InspectionPoint } from '../../models';
 import { Observable } from 'rxjs';
 
 @Component({
@@ -88,21 +88,19 @@ import { Observable } from 'rxjs';
               
               <div class="card-body">
                 <div class="form-group">
-                  <label>Task Description</label>
-                  <select [(ngModel)]="result.taskId" (change)="onTaskChange(result, i)" name="taskId-{{ i }}" class="form-control">
-                    <option value="">Select Task</option>
-                    <option *ngFor="let task of getTasks()" [value]="task.taskId">{{ task.taskDescription }}</option>
+                  <label>Task Description</label>                  <select [(ngModel)]="result.pointId" (change)="onPointChange(result, i)" name="pointId-{{ i }}" class="form-control">
+                    <option value="">Select Point</option>
+                    <option *ngFor="let point of getPoints()" [value]="point.pointId">{{ point.pointDescription }}</option>
                   </select>
                 </div>
 
                 <div class="form-row">
                   <div class="form-group col">
                     <label>Component Category</label>
-                    <input type="text" [value]="getTaskCategory(result.taskId)" readonly class="form-control form-control-readonly">
-                  </div>
-                  <div class="form-group col">
+                    <input type="text" [value]="getPointCategory(result.pointId)" readonly class="form-control form-control-readonly">
+                  </div>                  <div class="form-group col">
                     <label>Inspection Method</label>
-                    <input type="text" [value]="getTaskMethod(result.taskId)" readonly class="form-control form-control-readonly">
+                    <input type="text" [value]="getPointMethod(result.pointId)" readonly class="form-control form-control-readonly">
                   </div>
                 </div>
 
@@ -125,10 +123,9 @@ import { Observable } from 'rxjs';
                   <div class="form-group col">
                     <label>Observed Value</label>
                     <input type="text" [(ngModel)]="result.observedValue" name="observed-{{ i }}" class="form-control" placeholder="e.g. 6.5mm">
-                  </div>
-                  <div class="form-group col">
-                    <label>Expected Value (from Task Threshold)</label>
-                    <input type="text" [value]="getTaskThreshold(result.taskId)" readonly class="form-control form-control-readonly">
+                  </div>                  <div class="form-group col">
+                    <label>Expected Value (from Point Threshold)</label>
+                    <input type="text" [value]="getPointThreshold(result.pointId)" readonly class="form-control form-control-readonly">
                   </div>
                 </div>
 
@@ -538,7 +535,7 @@ export class InspectionJobsComponent implements OnInit {
   selectedTemplate: ITPTemplate | null = null;
   jobResults: InspectionResult[] = [];
   private allTemplates: ITPTemplate[] = [];
-  private allTasks: InspectionTask[] = [];
+  private allPoints: InspectionPoint[] = [];
 
   constructor(
     private jobService: InspectionJobService,
@@ -549,14 +546,13 @@ export class InspectionJobsComponent implements OnInit {
     this.punchLists$ = this.jobService.getPunchLists();
     this.defects$ = this.jobService.getDefects();
   }
-
   ngOnInit(): void {
-    // Cache templates and tasks
+    // Cache templates and points
     this.itpService.getTemplates().subscribe(templates => {
       this.allTemplates = templates;
     });
-    this.itpService.getTasks().subscribe(tasks => {
-      this.allTasks = tasks;
+    this.itpService.getPoints().subscribe(points => {
+      this.allPoints = points;
     });
   }
 
@@ -569,49 +565,47 @@ export class InspectionJobsComponent implements OnInit {
     // Get inspection results for this job
     this.jobResults = [...this.jobService.getResultsByJob(job.jobId)];
   }
-
-  getTaskDescription(taskId: string): string {
-    const task = this.allTasks.find(t => t.taskId === taskId);
-    return task ? task.taskDescription : 'Unknown Task';
+  getPointDescription(pointId: string): string {
+    const point = this.allPoints.find(p => p.pointId === pointId);
+    return point ? point.pointDescription : 'Unknown Point';
   }
 
-  getTasks(): InspectionTask[] {
-    return this.allTasks;
+  getPoints(): InspectionPoint[] {
+    return this.allPoints;
   }
 
-  getTaskCategory(taskId: string): string {
-    const task = this.allTasks.find(t => t.taskId === taskId);
-    return task ? task.componentCategory : '-';
+  getPointCategory(pointId: string): string {
+    const point = this.allPoints.find(p => p.pointId === pointId);
+    return point ? point.componentCategory : '-';
   }
 
-  getTaskMethod(taskId: string): string {
-    const task = this.allTasks.find(t => t.taskId === taskId);
-    return task ? task.inspectionMethod : '-';
+  getPointMethod(pointId: string): string {
+    const point = this.allPoints.find(p => p.pointId === pointId);
+    return point ? point.inspectionMethod : '-';
   }
 
-  getTaskThreshold(taskId: string): string {
-    const task = this.allTasks.find(t => t.taskId === taskId);
-    return task && task.taskThreshold ? task.taskThreshold : '-';
+  getPointThreshold(pointId: string): string {
+    const point = this.allPoints.find(p => p.pointId === pointId);
+    return point && point.pointThreshold ? point.pointThreshold : '-';
   }
 
-  onTaskChange(result: InspectionResult, index: number): void {
-    // Auto-populate expected value from task threshold
-    const task = this.allTasks.find(t => t.taskId === result.taskId);
-    if (task && task.taskThreshold) {
-      result.expectedValue = task.taskThreshold;
+  onPointChange(result: InspectionResult, index: number): void {
+    // Auto-populate expected value from point threshold
+    const point = this.allPoints.find(p => p.pointId === result.pointId);
+    if (point && point.pointThreshold) {
+      result.expectedValue = point.pointThreshold;
     }
   }
-
   addNewResult(): void {
     if (!this.selectedJobId) return;
 
     const newResult: InspectionResult = {
       resultId: 'res-' + Date.now(),
       jobId: this.selectedJobId,
-      taskId: this.allTasks.length > 0 ? this.allTasks[0].taskId : '',
+      pointId: this.allPoints.length > 0 ? this.allPoints[0].pointId : '',
       result: 'Pass',
       observedValue: '',
-      expectedValue: this.allTasks.length > 0 && this.allTasks[0].taskThreshold ? this.allTasks[0].taskThreshold : '',
+      expectedValue: this.allPoints.length > 0 && this.allPoints[0].pointThreshold ? this.allPoints[0].pointThreshold : '',
       inspectionDate: new Date(),
       inspectorId: 'usr-001'
     };
