@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { AssetService } from '../../services/asset.service';
 import { ComponentMasterService } from '../../services/component-master.service';
-import { Asset, TerminalLocation, ComponentMaster } from '../../models';
+import { AssetSpecsService } from '../../services/asset-specs.service';
+import { Asset, TerminalLocation, ComponentMaster, AssetSpecs } from '../../models';
 import { Observable } from 'rxjs';
 
 @Component({
@@ -108,6 +109,73 @@ import { Observable } from 'rxjs';
             <div class="no-diagram">
               <p>No 2D drawing available for this asset</p>
               <small>Add a diagram URL to display technical drawings</small>
+            </div>          </div>
+
+          <div class="info-section" *ngIf="selectedAssetSpecs">
+            <h4>Technical Specifications</h4>
+            <div class="specs-grid">
+              <div class="spec-item">
+                <label>Lift Capacity</label>
+                <span>{{ selectedAssetSpecs.liftCapacity || 'N/A' }} T</span>
+              </div>
+              <div class="spec-item">
+                <label>Max Speed</label>
+                <span>{{ selectedAssetSpecs.maxSpeed || 'N/A' }} m/s</span>
+              </div>
+              <div class="spec-item">
+                <label>Operating Pressure</label>
+                <span>{{ selectedAssetSpecs.operatingPressure || 'N/A' }} bar</span>
+              </div>
+              <div class="spec-item">
+                <label>Motor Power</label>
+                <span>{{ selectedAssetSpecs.motorPower || 'N/A' }} kW</span>
+              </div>
+              <div class="spec-item">
+                <label>Cycle Time</label>
+                <span>{{ selectedAssetSpecs.cycleTime || 'N/A' }} s</span>
+              </div>
+              <div class="spec-item">
+                <label>Track Gauge</label>
+                <span>{{ selectedAssetSpecs.trackGauge || 'N/A' }} mm</span>
+              </div>
+              <div class="spec-item">
+                <label>Boom Length</label>
+                <span>{{ selectedAssetSpecs.boomLength || 'N/A' }} m</span>
+              </div>
+              <div class="spec-item">
+                <label>Wheel Diameter</label>
+                <span>{{ selectedAssetSpecs.wheelDiameter || 'N/A' }} mm</span>
+              </div>
+              <div class="spec-item">
+                <label>Tire Condition</label>
+                <span>{{ selectedAssetSpecs.tireCondition || 'N/A' }}</span>
+              </div>
+              <div class="spec-item">
+                <label>Last Service Date</label>
+                <span>{{ (selectedAssetSpecs.lastServiceDate | date:'MMM dd, yyyy') || 'N/A' }}</span>
+              </div>
+              <div class="spec-item">
+                <label>Next Service Date</label>
+                <span [ngClass]="isServiceUpcoming(selectedAssetSpecs.nextServiceDate) ? 'upcoming-service' : ''">
+                  {{ (selectedAssetSpecs.nextServiceDate | date:'MMM dd, yyyy') || 'N/A' }}
+                </span>
+              </div>
+              <div class="spec-item">
+                <label>Certifications</label>
+                <span>{{ selectedAssetSpecs.certifications || 'N/A' }}</span>
+              </div>
+            </div>
+            <div class="maintenance-history" *ngIf="selectedAssetSpecs.maintenanceHistory">
+              <h5>Maintenance History</h5>
+              <p>{{ selectedAssetSpecs.maintenanceHistory }}</p>
+            </div>
+          </div>
+
+          <div class="info-section" *ngIf="!selectedAssetSpecs">
+            <h4>Technical Specifications</h4>
+            <div class="no-specs">
+              <p>No technical specifications available for this asset</p>
+              <small>Add specifications to view detailed asset data</small>
             </div>
           </div><div class="info-section">
             <h4>Component Tree Structure</h4>
@@ -852,15 +920,99 @@ import { Observable } from 'rxjs';
     }    .no-component-diagram small {
       font-size: 11px;
       color: #bbb;
-    }
-
-    .children {
+    }    .children {
       margin-left: 10px;
       padding: 8px 0 8px 8px;
       border-left: 2px dotted #7b1fa2;
     }
 
+    .specs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .spec-item {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      padding: 12px;
+      background-color: white;
+      border-radius: 4px;
+      border: 1px solid #e0e0e0;
+      border-left: 3px solid #7b1fa2;
+    }
+
+    .spec-item label {
+      font-weight: bold;
+      color: #7b1fa2;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .spec-item span {
+      color: #333;
+      font-size: 14px;
+      padding: 6px;
+      background-color: #f9f9f9;
+      border-radius: 3px;
+    }
+
+    .spec-item span.upcoming-service {
+      color: #d32f2f;
+      font-weight: bold;
+    }
+
+    .maintenance-history {
+      margin-top: 15px;
+      padding: 12px;
+      background-color: white;
+      border-radius: 4px;
+      border-left: 3px solid #7b1fa2;
+    }
+
+    .maintenance-history h5 {
+      margin: 0 0 10px 0;
+      color: #7b1fa2;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .maintenance-history p {
+      margin: 0;
+      color: #666;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .no-specs {
+      width: 100%;
+      padding: 40px 20px;
+      background: linear-gradient(135deg, #f5f5f5 0%, #fafafa 100%);
+      border-radius: 6px;
+      border: 2px dashed #ddd;
+      text-align: center;
+      color: #999;
+    }
+
+    .no-specs p {
+      margin: 10px 0 5px 0;
+      font-size: 14px;
+    }
+
+    .no-specs small {
+      font-size: 12px;
+      color: #bbb;
+    }
+
     @media (max-width: 768px) {
+      .specs-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      }
+
       .info-grid {
         grid-template-columns: 1fr;
       }
@@ -885,6 +1037,7 @@ export class AssetListComponent implements OnInit {
   assets$: Observable<Asset[]>;
   selectedAssetId: string | null = null;
   selectedAsset: Asset | null = null;
+  selectedAssetSpecs: AssetSpecs | null = null;
   assetComponents: ComponentMaster[] = [];
   componentTree: ComponentMaster[] = [];
   expandedNodes: Set<string> = new Set();
@@ -893,6 +1046,7 @@ export class AssetListComponent implements OnInit {
   constructor(
     private assetService: AssetService,
     private componentService: ComponentMasterService,
+    private assetSpecsService: AssetSpecsService,
     private route: ActivatedRoute
   ) {
     this.assets$ = this.assetService.getAssets();
@@ -912,20 +1066,22 @@ export class AssetListComponent implements OnInit {
       }
     });
   }
-
   selectAsset(asset: Asset): void {
     this.selectedAssetId = asset.assetId;
     this.selectedAsset = asset;
     this.loadAssetComponents(asset.assetId);
+    this.loadAssetSpecs(asset.assetId);
   }
+
   closeDetails(): void {
     this.selectedAssetId = null;
     this.selectedAsset = null;
+    this.selectedAssetSpecs = null;
     this.assetComponents = [];
     this.componentTree = [];
     this.expandedNodes.clear();
     this.selectedComponentId = null;
-  }  private loadAssetComponents(assetId: string): void {
+  }private loadAssetComponents(assetId: string): void {
     // Load components for this asset from the service
     const allComponents$ = this.componentService.getComponents();
     allComponents$.subscribe(components => {
@@ -969,7 +1125,6 @@ export class AssetListComponent implements OnInit {
   isExpanded(component: ComponentMaster): boolean {
     return this.expandedNodes.has(component.componentId);
   }
-
   selectComponent(component: ComponentMaster): void {
     // Toggle the selected component - if it's already selected, deselect it
     if (this.selectedComponentId === component.componentId) {
@@ -978,5 +1133,20 @@ export class AssetListComponent implements OnInit {
       this.selectedComponentId = component.componentId;
     }
   }
+  private loadAssetSpecs(assetId: string): void {
+    // Load specs for this asset from the service
+    const specs$ = this.assetSpecsService.getSpecsByAssetId(assetId);
+    specs$.subscribe(specs => {
+      this.selectedAssetSpecs = specs || null;
+    });
+  }
+
+  isServiceUpcoming(nextServiceDate: Date | undefined): boolean {
+    if (!nextServiceDate) return false;
+    const today = new Date();
+    const thirtyDaysFromNow = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+    return nextServiceDate <= thirtyDaysFromNow && nextServiceDate >= today;
+  }
 }
+
 
